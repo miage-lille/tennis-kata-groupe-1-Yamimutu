@@ -1,5 +1,6 @@
 import { Player } from './types/player';
-import { Point, PointsData, Score } from './types/score';
+import { PointsData, Score } from './types/score';
+import { advantage, Point } from './types/point';
 // import { none, Option, some, match as matchOpt } from 'fp-ts/Option';
 // import { pipe } from 'fp-ts/lib/function';
 
@@ -21,16 +22,27 @@ export const otherPlayer = (player: Player) => {
       return 'PLAYER_ONE';
   }
 };
+
 // Exercice 1 :
-export const pointToString = (point: Point): string =>
-  'You can use pattern matching with switch case pattern.';
-
-export const scoreToString = (score: Score): string =>
-  'You can use pattern matching with switch case pattern.';
-
-export const scoreWhenDeuce = (winner: Player): Score => {
-  throw new Error('not implemented');
+export const pointToString = (point: Point): string => {
+  switch (point.kind) {
+    case 'LOVE': return '0';
+    case 'FIFTEEN': return '15';
+    case 'THIRTY': return '30';
+  }
 };
+
+export const scoreToString = (score: Score): string => {
+  switch (score.kind) {
+    case 'POINTS': return `Player One : ${pointToString(score.pointsData.PLAYER_ONE)} - Player Two : ${pointToString(score.pointsData.PLAYER_TWO)}`;
+    case 'FORTY': return `${score.fortyData.player} : 40 - Other Player :  ${pointToString(score.fortyData.otherPoint)}`;
+    case 'DEUCE': return `Deuce`;
+    case 'ADVANTAGE': return `Advantage : ${score.player}`;
+    case 'GAME': return `Game : ${score.player}`;
+  }
+}
+
+export const scoreWhenDeuce = (winner: Player): Score => advantage(winner);
 
 export const scoreWhenAdvantage = (
   advantagedPlayed: Player,
