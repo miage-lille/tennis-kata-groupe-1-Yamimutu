@@ -6,9 +6,10 @@ import {
   FortyData,
   Love,
   Point,
-  Points,
   Thirty,
-} from '../types/score';
+} from '../types/point';
+
+import {Points} from '../types/score';
 
 export const playerOneArb = (): fc.Arbitrary<Player> =>
   fc.constant('PLAYER_ONE');

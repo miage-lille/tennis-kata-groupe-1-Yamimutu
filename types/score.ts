@@ -1,7 +1,5 @@
 import { Player } from './player';
-
-// Surely not the best choice
-export type Point = number;
+import { Advantage, Deuce, Forty, Point } from './point';
 
 export type PointsData = {
   PLAYER_ONE: Point;
@@ -24,8 +22,6 @@ export const points = (
   },
 });
 
-// Exerice 0: Write all type constructors of Points, Deuce, Forty and Advantage types.
-
 export type Game = {
   kind: 'GAME';
   player: Player; // Player has won
@@ -36,4 +32,6 @@ export const game = (winner: Player): Game => ({
   player: winner,
 });
 
-export type Score = Points | Game;
+export type Score = Points | Forty | Deuce | Advantage | Game;
+
+
