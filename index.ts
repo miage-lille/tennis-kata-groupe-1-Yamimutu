@@ -1,8 +1,9 @@
-import { Player } from './types/player';
-import { PointsData, Score } from './types/score';
-import { advantage, Point } from './types/point';
-// import { none, Option, some, match as matchOpt } from 'fp-ts/Option';
-// import { pipe } from 'fp-ts/lib/function';
+import { isSamePlayer, Player } from './types/player';
+import { game, points, PointsData, Score } from './types/score';
+import { advantage, deuce, fifteen, forty, FortyData, love, Point, thirty } from './types/point';
+
+import { none, Option, some, match as matchOpt } from 'fp-ts/Option';
+import { pipe } from 'fp-ts/lib/function';
 
 // -------- Tooling functions --------- //
 
@@ -34,11 +35,16 @@ export const pointToString = (point: Point): string => {
 
 export const scoreToString = (score: Score): string => {
   switch (score.kind) {
-    case 'POINTS': return `Player One : ${pointToString(score.pointsData.PLAYER_ONE)} - Player Two : ${pointToString(score.pointsData.PLAYER_TWO)}`;
-    case 'FORTY': return `${score.fortyData.player} : 40 - Other Player :  ${pointToString(score.fortyData.otherPoint)}`;
-    case 'DEUCE': return `Deuce`;
-    case 'ADVANTAGE': return `Advantage : ${score.player}`;
-    case 'GAME': return `Game : ${score.player}`;
+    case 'POINTS': 
+      return `${playerToString('PLAYER_ONE')} : ${pointToString(score.pointsData.PLAYER_ONE)} - ${playerToString('PLAYER_TWO')} : ${pointToString(score.pointsData.PLAYER_TWO)}`;
+    case 'FORTY': 
+      return `${playerToString(score.fortyData.player)} : 40 - ${playerToString(otherPlayer(score.fortyData.player))} : ${pointToString(score.fortyData.otherPoint)}`;
+    case 'DEUCE': 
+      return `Deuce`;
+    case 'ADVANTAGE': 
+      return `Advantage : ${playerToString(score.player)}`;
+    case 'GAME': 
+      return `Game : ${playerToString(score.player)}`;
   }
 }
 
@@ -48,27 +54,85 @@ export const scoreWhenAdvantage = (
   advantagedPlayed: Player,
   winner: Player
 ): Score => {
-  throw new Error('not implemented');
+  if (isSamePlayer(advantagedPlayed, winner)) return game(winner);
+  return deuce();
 };
 
 export const scoreWhenForty = (
-  currentForty: unknown, // TO UPDATE WHEN WE KNOW HOW TO REPRESENT FORTY
+  currentForty: FortyData, // TO UPDATE WHEN WE KNOW HOW TO REPRESENT FORTY
   winner: Player
 ): Score => {
-  throw new Error('not implemented');
+  if (isSamePlayer(currentForty.player, winner)) return game(winner);
+  return pipe(
+    incrementPoint(currentForty.otherPoint),
+    matchOpt(
+      () => deuce(),
+      p => forty(currentForty.player, p) as Score
+    )
+  );
 };
 
 export const scoreWhenGame = (winner: Player): Score => {
-  throw new Error('not implemented');
+  return game(winner);
 };
 
 // Exercice 2
 // Tip: You can use pipe function from fp-ts to improve readability.
 // See scoreWhenForty function above.
 export const scoreWhenPoint = (current: PointsData, winner: Player): Score => {
-  throw new Error('not implemented');
+  return pipe(
+    incrementPoint(current[winner]),
+    matchOpt(
+      () => forty(winner, current[otherPlayer(winner)]),
+      (newPoint) => ({
+        kind: 'POINTS',
+        pointsData: {
+          ...current,
+          [winner]: newPoint,
+        },
+      } as Score)
+    )
+  );
 };
 
 export const score = (currentScore: Score, winner: Player): Score => {
-  throw new Error('not implemented');
+  switch (currentScore.kind) {
+    case 'POINTS':
+      return scoreWhenPoint(currentScore.pointsData, winner);
+    case 'FORTY':
+      return scoreWhenForty(currentScore.fortyData, winner);
+    case 'ADVANTAGE':
+      return scoreWhenAdvantage(currentScore.player, winner);
+    case 'DEUCE':
+      return scoreWhenDeuce(winner);
+    case 'GAME':
+      return scoreWhenGame(winner);
+  }
 };
+
+export const incrementPoint = (point: Point): Option<Point> => {
+  switch (point.kind) {
+    case 'LOVE':
+      return some(fifteen());
+    case 'FIFTEEN':
+      return some(thirty());
+    case 'THIRTY':
+      return none;
+  }
+};
+
+const simulateGame = () => {
+  let currentScore: Score = points(love(), love());
+  console.log("Début du jeu :");
+
+  const players: Player[] = ['PLAYER_ONE', 'PLAYER_TWO'];
+  for (let i = 0; i < 10; i++) {
+    const winner = players[Math.floor(Math.random() * players.length)];
+    currentScore = score(currentScore, winner);
+    console.log(`Point gagné par : ${playerToString(winner)}`);
+    console.log(`${scoreToString(currentScore)}\n`);
+    if (currentScore.kind === 'GAME') break;
+  }
+};
+
+simulateGame();
